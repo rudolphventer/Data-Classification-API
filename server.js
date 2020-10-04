@@ -43,18 +43,19 @@ var upload = multer({ storage: storage })
 
 app.post("/newuser", async (req, res) => {
   var user = req.body;
-  var status = {"Status" : "Email already in use", "data": false};
+  var status = {"status" : "Email already in use", "data": false};
   if(validateEmail(user.email))
   {
     var hashedPassword = await hashPassword(user.password)
     var status = await DataFunctions.NewUser(user.email, hashedPassword)
-    status = {"Status" : "Account created successfully", "data": true};
+    status = {"status" : "Account created successfully", "data": true};
   }
   res.send(status);
 });
 
-app.get("/login", async (req, res) => {
-  var response = {};
+app.post("/login", async (req, res) => {
+  console.log(req.body)
+  var response = response = {"status": "Login unsuccessful", "data" : false};;
   var user = await DataFunctions.GetUser(req.body.email)
   if(user)
     var auth = await hashesMatch(req.body.password, user.passwordhash)
@@ -71,10 +72,10 @@ app.get("/login", async (req, res) => {
 
 app.post('/upload', upload.single('file'), async (req, res, next) => {
   const file = req.file;
-  var status = {"Status" : "Upload failed", "data": false}
+  var status = {"status" : "Upload failed", "data": false}
   if (!file) {
-    status = {"Status" : "Upload failed", "data": false}
-    error.httpStatusCode = 400
+    status = {"status" : "Upload failed", "data": false}
+    error.httpstatusCode = 400
     return next(error)
   }
   var userToken = req.headers.authorization.split(" ")[1];
@@ -84,11 +85,11 @@ app.post('/upload', upload.single('file'), async (req, res, next) => {
   if(user)
   {
     if(classificationFile) ID = await DataFunctions.NewClassification(classificationFile)
-    status = {"Status" : "Upload succesful", "data": ID}
+    status = {"status" : "Upload succesful", "data": ID}
   }
   else
   {
-    status = {"Status" : "Invalid credentials", "data": false};
+    status = {"status" : "Invalid credentials", "data": false};
   }
   res.send(status)
 })
