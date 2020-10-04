@@ -8,6 +8,7 @@ var DataFunctions = require('./datafunctions');
 var Classifier = require('./classifier');
 const path = require('path');
 const { stat } = require('fs');
+const { DBCONN } = require('./datafunctions');
 
 const app = express();
 
@@ -15,9 +16,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
+//Waiting for DB connection before starting server
+DataFunctions.DBCONN.connect()
+.then(res => {
+  DataFunctions.SetDBO();
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}\nDB connection successful`);
+  });
+})
+
 
 //Multer stuff
 
@@ -36,49 +43,81 @@ var upload = multer({ storage: storage })
 
 app.post("/newuser", async (req, res) => {
   var user = req.body;
-  var status = "Email already in use";
+  var status = {"Status" : "Email already in use", "data": false};
   if(validateEmail(user.email))
   {
     var hashedPassword = await hashPassword(user.password)
     var status = await DataFunctions.NewUser(user.email, hashedPassword)
-    status = "Account created successfully";
+    status = {"Status" : "Account created successfully", "data": true};
   }
   res.send(status);
 });
 
 app.get("/login", async (req, res) => {
+  var response = {};
   var user = await DataFunctions.GetUser(req.body.email)
-  console.log(user)
   if(user)
     var auth = await hashesMatch(req.body.password, user.passwordhash)
   else
-    res.send("Invalid credentials")
-  var authToken = await generateAccessToken(user.email, user._id)
-  res.send({"authtoken" : authToken});
+    response = {"status": "No user with those credentials exists", "data" : false};
+  if(auth)
+  {
+    var authToken = await generateAccessToken(user.email, user._id)
+    response = {"status": "Login sucessful", "data" : authToken};
+  }
+
+  res.send(response)
 });
 
 app.post('/upload', upload.single('file'), async (req, res, next) => {
   const file = req.file;
-  var status = "File upload failed";
+  var status = {"Status" : "Upload failed", "data": false}
   if (!file) {
-    const error = new Error('Please upload a file')
+    status = {"Status" : "Upload failed", "data": false}
     error.httpStatusCode = 400
     return next(error)
   }
   var userToken = req.headers.authorization.split(" ")[1];
   var user = await verifyAccessToken(userToken);
+  var classificationFile = await Classifier.Classify(file.destination+file.filename, user.id)
+  var ID = false;
   if(user)
   {
-    var classificationFile = await Classifier.Classify(file.destination+file.filename, user.id)
-    console.log(classificationFile)
-    DataFunctions.NewClassification(classificationFile)
-    //res.send(file) seems to return info about the file
-    status = "Uplaod succesful"
-    
+    if(classificationFile) ID = await DataFunctions.NewClassification(classificationFile)
+    status = {"Status" : "Upload succesful", "data": ID}
+  }
+  else
+  {
+    status = {"Status" : "Invalid credentials", "data": false};
   }
   res.send(status)
 })
 
+app.get("/getfile", async (req, res) => {
+  var status ={};
+  var userToken = req.headers.authorization.split(" ")[1];
+  var user = await verifyAccessToken(userToken);
+  var reqFile = await DataFunctions.GetClassification(req.body.fileID)
+  if(user.id == reqFile.userID)
+  {
+    status = {"status": "Authorised", "data" : reqFile}
+  }
+  else status = {"status": "File does not exist or authentication failed", "data" : false};
+  res.send(status)
+})
+
+app.post("/updatefile", upload.single('file'), async (req, res, next) => {
+  var status ={};
+  var userToken = req.headers.authorization.split(" ")[1];
+  var user = await verifyAccessToken(userToken);
+  if(user.id == req.body.userID)
+  {
+    DataFunctions.UpdateClassification(req.body);
+    status = {"status": "Success", "data" : true}
+  }
+  else status = {"status": "File does not exist or authentication failed", "data" : false};
+  res.send(status)
+})
 ////////////////////////////// Tools /////////////////////////////////
 
 function validateEmail(email)
