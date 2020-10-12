@@ -1,16 +1,22 @@
 const fs = require('fs').promises
 const TextClassifier = require('text-classifier');
 const csv = require('async-csv');
+const { Classifier } = require('ml-classify-text')
 var XLSX = require('node-xlsx');
 
 let classifier = new TextClassifier;
+const mlclassifier = new Classifier()
 var trained = false;
+
+trainer()
 
 async function trainer ()
 {
     var model = []
     Object.assign(model, await readTrainingData("training_data.csv"));
-    model.map(type => {classifier.learn(type.data, type.name);})  
+    //model.map(type => {classifier.learn(type.data, type.name);})  
+    model.map(type => {mlclassifier.train(type.data, type.name);}) 
+    test() 
     return true;
     //getColumns("./TestDataReal.csv").then(x => {console.log(x)})
 }
@@ -35,17 +41,17 @@ function getMaxOccurrence(arr) {
 
 function test (){
     //Testing the model
-    console.table(model)
-    console.log("Testing: SA ID",classifier.classify('9902025067022'))
-    console.log("Testing: Firstname",classifier.classify('John'))
-    console.log("Testing: Surname",classifier.classify('Smith'))
-    console.log("Testing: Phone Number",classifier.classify('0832921130'))
-    console.log("Testing: Address",classifier.classify('4 Shepard Road, Sandton, Johannesburg'))
-    console.log("Testing: Race",classifier.classify('White'))
-    console.log("Testing: Company",classifier.classify('NedBank'))
-    console.log("Testing: Row ID",classifier.classify('12'))
-    console.log("Testing: Personal Message",classifier.classify('Did you remember to defrost the bacon?'))
-    console.log("Testing: Email Address",classifier.classify('john222332@gmail.com'))
+    //console.table(model)
+    console.log("Testing: SA ID",mlclassifier.predict('9902025067022', 1, 0)[0].label)
+    console.log("Testing: Firstname",mlclassifier.predict('John', 1, 0))
+    console.log("Testing: Surname",mlclassifier.predict('Smith', 1, 0))
+    console.log("Testing: Phone Number",mlclassifier.predict('0832921130', 1, 0))
+    console.log("Testing: Address",mlclassifier.predict('4 Shepard Road, Sandton, Johannesburg', 1, 0))
+    console.log("Testing: Race",mlclassifier.predict('White', 1, 0))
+    console.log("Testing: Company",mlclassifier.predict('NedBank', 1, 0))
+    console.log("Testing: Row ID",mlclassifier.predict('12', 1, 0))
+    console.log("Testing: Personal Message",mlclassifier.predict('Did you remember to defrost the bacon?', 1, 0))
+    console.log("Testing: Email Address",mlclassifier.predict('john222332@gmail.com', 1, 0))
 }
 
 async function readTrainingData(path)
@@ -91,8 +97,8 @@ async function getColumns(path)
         //I go through each column, classifying each item, then adding the classification to a new array (typelist)
         var typeList = []
         var x = await Promise.all(column.map(async x => { 
-            var type = await classifier.classify(x);
-            typeList.push(type.textClass)
+            var type = await mlclassifier.predict(x);
+            typeList.push(type[0].label)
         }));
         //I find the most common cassification in the array for each column and use that as the final header 
         columns.push(getMaxOccurrence(typeList))
