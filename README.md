@@ -44,9 +44,7 @@ Routes:
 * /updatefile - Recives a JWT and a headerfile as JSON. If the JWT user is verified as the owner of the headerfile in the DB then the file is replaced with the new headerfile.
 
 ## --📃--The Classifier--📃--
-I have a large training dataset (training_data.csv) that is used to train the [Text-Classifier](https://www.npmjs.com/package/text-classifier) after reading the file. This training happens once every time the server is restarted and takes a few seconds. After this is done, the uploaded file is read into a two dimensional array, with each column being it's own array, the classifier then checks each column and averages the results for each item to generate a header for the column.
-
-At the moment this classification is done based on string similarity according to the [Sørensen–Dice coefficient](https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient)
+I have a large training dataset (training_data.csv) that is used to train the [ML-Text-Classifier](https://www.npmjs.com/package/ml-classify-text) after reading the file. This training happens once every time the server is restarted and takes a few seconds. After this is done, the uploaded file is read into a two dimensional array, with each column being it's own array, the classifier then checks each column and averages the results for each item to generate a header for the column.
 
 ## --💻--Project setup--💻--
 

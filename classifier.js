@@ -1,10 +1,8 @@
 const fs = require('fs').promises
-const TextClassifier = require('text-classifier');
 const csv = require('async-csv');
 const { Classifier } = require('ml-classify-text')
 var XLSX = require('node-xlsx');
 
-let classifier = new TextClassifier;
 const mlclassifier = new Classifier()
 var trained = false;
 
@@ -14,11 +12,8 @@ async function trainer ()
 {
     var model = []
     Object.assign(model, await readTrainingData("training_data.csv"));
-    //model.map(type => {classifier.learn(type.data, type.name);})  
     model.map(type => {mlclassifier.train(type.data, type.name);}) 
-    test() 
     return true;
-    //getColumns("./TestDataReal.csv").then(x => {console.log(x)})
 }
 
 function getMaxOccurrence(arr) {
