@@ -85,14 +85,13 @@ async function getColumns(path)
         var file = await readCSVFile(path);
     else 
         return false;
-
     //The file is converted into an array with each column being it's own array [[column1], [column2] etc..]
     var columns = [];
     var y = await Promise.all(file.map( async column => {
         //I go through each column, classifying each item, then adding the classification to a new array (typelist)
         var typeList = []
         var x = await Promise.all(column.map(async x => { 
-            var type = await mlclassifier.predict(x);
+            var type = await mlclassifier.predict(String(x), 1, 0);
             typeList.push(type[0].label)
         }));
         //I find the most common cassification in the array for each column and use that as the final header 
@@ -139,7 +138,7 @@ async function readXLSXFile(path)
     //For each line in CSV
     for(var i = 0; i < rows.length; i++)
     {
-        rows[i].map((value, index) => {data[index].push(value)})
+        rows[i].map((value, index) => {if(data[index]) data[index].push(value)})
     }
     return data;
 }
