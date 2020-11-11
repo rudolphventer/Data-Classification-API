@@ -92,17 +92,23 @@ app.post('/upload', upload.single('file'), async (req, res, next) => {
   var userToken = req.headers.authorization.split(" ")[1];
   var user = await verifyAccessToken(userToken);
   var t0 = new Date().getTime();
-  var classificationFile = await Classifier.Classify(file.destination+file.filename, user.id, req.file.originalname); //Calling classifier method in classifier.js
-  var t1 = new Date().getTime();
-  var ID = false;
-  if(user)
-  {
-    if(classificationFile) ID = await DataFunctions.NewClassification(classificationFile)
-    status = {"status" : "Upload succesful", "processingtime": (t1 - t0), "data": ID}
+  try{
+    var classificationFile = await Classifier.Classify(file.destination+file.filename, user.id, req.file.originalname); //Calling classifier method in classifier.js
+    var t1 = new Date().getTime();
+    var ID = false;
+    if(user)
+    {
+      if(classificationFile) ID = await DataFunctions.NewClassification(classificationFile)
+      status = {"status" : "Upload succesful", "processingtime": (t1 - t0), "data": ID}
+    }
+    else
+    {
+      status = {"status" : "Invalid credentials", "data": false};
+    }
   }
-  else
+  catch(err)
   {
-    status = {"status" : "Invalid credentials", "data": false};
+    status = {"status" : "Errors in file caused a failure to classify", "data": false};
   }
   res.send(status)
 })

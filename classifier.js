@@ -85,7 +85,6 @@ async function getColumns(path)
         var file = await readCSVFile(path);
     else 
         return false;
-
     //The file is converted into an array with each column being it's own array [[column1], [column2] etc..]
     var columns = [];
     var y = await Promise.all(file.map( async column => {
@@ -158,8 +157,13 @@ module.exports = {
     
 Classify: async function (fileDir, userID, fileName)
 {
+    try{
+        var headers = await getColumns(fileDir)
+    }   
+    catch(err)
+    {
         
-    var headers = await getColumns(fileDir)
+    }
     DeleteFile(fileDir)
     return {"userID": userID, "columns" : headers, "filename": fileName};
 }
