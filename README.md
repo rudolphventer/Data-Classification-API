@@ -7,7 +7,7 @@
 
   
 
-My name is Rudolph Venter and Classy is my text classification API. Available at http://classy-frontend.s3-website.eu-central-1.amazonaws.com or [classy.rudolphventer.me](http://classy.rudolphventer.me)
+My name is Rudolph Venter and Classy is my text classification API. Available at http://classy.rudolphventer.me.s3-website.eu-central-1.amazonaws.com/ or [classy.rudolphventer.me](http://classy.rudolphventer.me)
 
 
 ## --🧱--The Stack--🧱--
