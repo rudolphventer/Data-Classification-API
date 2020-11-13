@@ -78,6 +78,7 @@ app.post("/login", async (req, res) => {
 });
 //Used to wake up API dyno
 app.get("/ping", async (req, res) => {
+  var x = await Classifier.Train();
   res.send(true)
 });
 //Receives a formdata object with a file and JWT, stores file if JWT is valid

@@ -6,8 +6,6 @@ var XLSX = require('node-xlsx');
 const mlclassifier = new Classifier()
 var trained = false;
 
-trainer()
-
 async function trainer ()
 {
     var model = []
@@ -161,6 +159,18 @@ Classify: async function (fileDir, userID, fileName)
     var headers = await getColumns(fileDir)
     DeleteFile(fileDir)
     return {"userID": userID, "columns" : headers, "filename": fileName};
+},
+
+Train: async function ()
+{
+    //If it has not yet been trained, do so 
+    if(!trained)
+    {
+        console.log("started training")
+        trained = await trainer();
+        console.log("started finished training")
+    }
+    return true;
 }
 
 }
